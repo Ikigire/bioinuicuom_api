@@ -9,11 +9,11 @@ function getConfiguration() {
         process.env.certPath,
         process.env.keyPath,
     )
-    
+
     builder.withConnectProperties({
         keepAliveIntervalSeconds: 1200
     });
-    
+
     return builder.build();
 }
 
@@ -37,26 +37,21 @@ async function closeClient(client) {
 function createClient(config) {
     const client = new mqtt5.Mqtt5Client(config);
 
-    // client.on('error', (error) => {
-    //     console.log("\n\nError event: " + error.toString());
-    // });
+    client.on('error', (error) => {
+        console.log("\n\nError event: " + error.toString());
+    });
 
     client.on('attemptingConnect', (eventData) => {
         console.log("\n\nAttempting Connect event");
     });
 
-    client.on('connectionSuccess', (eventData) => {
-        console.log("\n\nConnection Success event");
-        console.log ("\n\nConnack: " + JSON.stringify(eventData.connack));
-        console.log ("\n\nSettings: " + JSON.stringify(eventData.settings));
-    });
 
-    // client.on('connectionFailure', (eventData) => {
-    //     console.log("\n\nConnection failure event: " + eventData.error.toString());
-    //     if (eventData.connack) {
-    //         console.log ("Connack: " + JSON.stringify(eventData.connack));
-    //     }
-    // });
+    client.on('connectionFailure', (eventData) => {
+        console.log("\n\nConnection failure event: " + eventData.error.toString());
+        if (eventData.connack) {
+            console.log ("Connack: " + JSON.stringify(eventData.connack));
+        }
+    });
 
     client.on('disconnection', (eventData) => {
         console.log("\n\nDisconnection event: " + eventData.error.toString());
@@ -77,7 +72,7 @@ module.exports = {
         // default value: 142800F7C630
         const { mac } = req.params;
 
-        if (!mac.trim().length){
+        if (!mac.trim().length) {
             return res.status(400).json({
                 errorType: 'Bad request',
                 message: `La mac de dispositivo no fue incluido`
@@ -85,37 +80,41 @@ module.exports = {
         }
         let client = createClient(getConfiguration());
         
+        let timeOutId = null;
+
         const connectionSuccess = once(client, 'connectionSuccess');
 
-        client.on('error', (error) => {
-            console.log("\n\nError event: " + error.toString());
-            closeClient();
-            res.status(404).json({
-                errorType: 'Topic no encontrado',
-                message: `${eventData.error.toString()}`
-            });
+        client.on('connectionSuccess', (eventData) => {
+            console.log("\n\nConnection Success event");
+            console.log("\n\nConnack: ", (eventData.connack));
+            console.log("\n\nSettings: ", (eventData.settings));
+    
+            timeOutId = setTimeout(() => {
+                closeClient(client);
+                res.status(404).json({
+                    errorType: 'TimeOut expirado',
+                    message: `No fue posible conectarse con el dispositivo`
+                });
+            }, 12000);
         });
-        
 
-        client.on("messageReceived",async (eventData) => {
+
+        client.on("messageReceived", async (eventData) => {
+            if (timeOutId != null)
+                clearTimeout(timeOutId)
+            
             console.log("\n\nMessage Received event: " + JSON.stringify(eventData.message));
 
             if (eventData.message.payload) {
                 console.log("  with payload: " + toUtf8(new Uint8Array(eventData.message.payload)));
             }
+
             await closeClient(client);
 
             return res.status(200).json(JSON.parse(toUtf8(new Uint8Array(eventData.message.payload))));
-        } );
-
-        client.on('connectionFailure', (eventData) => {
-            console.log("\n\nConnection failure event: " + eventData.error.toString());
-            if (eventData.connack) {
-                console.log ("Connack: " + JSON.stringify(eventData.connack));
-            }
-            
-            return res.status(200).json(JSON.parse(toUtf8(new Uint8Array(eventData.message.payload))));
         });
+
+        
 
         client.start();
 
@@ -130,6 +129,6 @@ module.exports = {
             ]
         });
 
-        console.log('\n\nSuback result: ' + JSON.stringify(subscription));
+        console.log('\n\nSuback result: ', (subscription));
     }
 }

@@ -37,36 +37,36 @@ async function closeClient(client) {
 function createClient(config) {
     const client = new mqtt5.Mqtt5Client(config);
 
-    client.on('error', (error) => {
-        console.log("Error event: " + error.toString());
-    });
+    // client.on('error', (error) => {
+    //     console.log("\n\nError event: " + error.toString());
+    // });
 
     client.on('attemptingConnect', (eventData) => {
-        console.log("Attempting Connect event");
+        console.log("\n\nAttempting Connect event");
     });
 
     client.on('connectionSuccess', (eventData) => {
-        console.log("Connection Success event");
-        console.log ("Connack: " + JSON.stringify(eventData.connack));
-        console.log ("Settings: " + JSON.stringify(eventData.settings));
+        console.log("\n\nConnection Success event");
+        console.log ("\n\nConnack: " + JSON.stringify(eventData.connack));
+        console.log ("\n\nSettings: " + JSON.stringify(eventData.settings));
     });
 
-    client.on('connectionFailure', (eventData) => {
-        console.log("Connection failure event: " + eventData.error.toString());
-        if (eventData.connack) {
-            console.log ("Connack: " + JSON.stringify(eventData.connack));
-        }
-    });
+    // client.on('connectionFailure', (eventData) => {
+    //     console.log("\n\nConnection failure event: " + eventData.error.toString());
+    //     if (eventData.connack) {
+    //         console.log ("Connack: " + JSON.stringify(eventData.connack));
+    //     }
+    // });
 
     client.on('disconnection', (eventData) => {
-        console.log("Disconnection event: " + eventData.error.toString());
+        console.log("\n\nDisconnection event: " + eventData.error.toString());
         if (eventData.disconnect !== undefined) {
-            console.log('Disconnect packet: ' + JSON.stringify(eventData.disconnect));
+            console.log('\n\nDisconnect packet: ' + JSON.stringify(eventData.disconnect));
         }
     });
 
     client.on('stopped', (eventData) => {
-        console.log("Stopped event");
+        console.log("\n\nStopped event");
     });
 
     return client;
@@ -87,16 +87,35 @@ module.exports = {
         
         const connectionSuccess = once(client, 'connectionSuccess');
 
+        client.on('error', (error) => {
+            console.log("\n\nError event: " + error.toString());
+            closeClient();
+            res.status(404).json({
+                errorType: 'Topic no encontrado',
+                message: `${eventData.error.toString()}`
+            });
+        });
+        
+
         client.on("messageReceived",async (eventData) => {
-            console.log("Message Received event: " + JSON.stringify(eventData.message));
+            console.log("\n\nMessage Received event: " + JSON.stringify(eventData.message));
 
             if (eventData.message.payload) {
                 console.log("  with payload: " + toUtf8(new Uint8Array(eventData.message.payload)));
             }
             await closeClient(client);
 
-            return res.status(200).json(JSON.stringify(eventData.message));
+            return res.status(200).json(JSON.parse(toUtf8(new Uint8Array(eventData.message.payload))));
         } );
+
+        client.on('connectionFailure', (eventData) => {
+            console.log("\n\nConnection failure event: " + eventData.error.toString());
+            if (eventData.connack) {
+                console.log ("Connack: " + JSON.stringify(eventData.connack));
+            }
+            
+            return res.status(200).json(JSON.parse(toUtf8(new Uint8Array(eventData.message.payload))));
+        });
 
         client.start();
 
@@ -111,6 +130,6 @@ module.exports = {
             ]
         });
 
-        console.log('Suback result: ' + JSON.stringify(subscription));
+        console.log('\n\nSuback result: ' + JSON.stringify(subscription));
     }
 }

@@ -108,7 +108,7 @@ app.get('/mqtt/:mac', (req, res) => {
   console.log(mac);
 
   device.on('message', (topic, payload) => {
-    // console.log(payload.toString());
+    console.log(payload);
   
     iotMessage = JSON.parse(payload.toString());
     return res.status(200).json(iotMessage);

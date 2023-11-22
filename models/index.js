@@ -3,6 +3,7 @@
 const Sequelize = require('sequelize');
 const process = require('process');
 const usuarioModel = require('./usuario.model');
+const dispositivoModel = require('./dispositivo.model');
 const db = {};
 
 // let sequelize;
@@ -58,6 +59,7 @@ db.Sequelize = Sequelize;
 // Asignando las tablas que pertenecen a la Base de Datos
 
 db.usuarios = usuarioModel(sequelize, Sequelize.DataTypes);
+db.dispositivos = dispositivoModel(sequelize, Sequelize.DataTypes);
 
 
 

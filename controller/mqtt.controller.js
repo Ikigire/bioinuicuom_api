@@ -38,30 +38,30 @@ function createClient(config) {
     const client = new mqtt5.Mqtt5Client(config);
 
     client.on('error', (error) => {
-        console.log("\n\nError event: " + error.toString());
+        // console.log("\n\nError event: " + error.toString());
     });
 
     client.on('attemptingConnect', (eventData) => {
-        console.log("\n\nAttempting Connect event");
+        // console.log("\n\nAttempting Connect event");
     });
 
 
     client.on('connectionFailure', (eventData) => {
-        console.log("\n\nConnection failure event: " + eventData.error.toString());
+        // console.log("\n\nConnection failure event: " + eventData.error.toString());
         if (eventData.connack) {
-            console.log ("Connack: " + JSON.stringify(eventData.connack));
+            // console.log ("Connack: " + JSON.stringify(eventData.connack));
         }
     });
 
     client.on('disconnection', (eventData) => {
-        console.log("\n\nDisconnection event: " + eventData.error.toString());
+        // console.log("\n\nDisconnection event: " + eventData.error.toString());
         if (eventData.disconnect !== undefined) {
-            console.log('\n\nDisconnect packet: ' + JSON.stringify(eventData.disconnect));
+            // console.log('\n\nDisconnect packet: ' + JSON.stringify(eventData.disconnect));
         }
     });
 
     client.on('stopped', (eventData) => {
-        console.log("\n\nStopped event");
+        // console.log("\n\nStopped event");
     });
 
     return client;
@@ -85,9 +85,9 @@ module.exports = {
         const connectionSuccess = once(client, 'connectionSuccess');
 
         client.on('connectionSuccess', (eventData) => {
-            console.log("\n\nConnection Success event");
-            console.log("\n\nConnack: ", (eventData.connack));
-            console.log("\n\nSettings: ", (eventData.settings));
+            // console.log("\n\nConnection Success event");
+            // console.log("\n\nConnack: ", (eventData.connack));
+            // console.log("\n\nSettings: ", (eventData.settings));
     
             timeOutId = setTimeout(() => {
                 closeClient(client);
@@ -103,7 +103,7 @@ module.exports = {
             if (timeOutId != null)
                 clearTimeout(timeOutId)
             
-            console.log("\n\nMessage Received event: " + JSON.stringify(eventData.message));
+            // console.log("\n\nMessage Received event: " + JSON.stringify(eventData.message));
 
             if (eventData.message.payload) {
                 console.log("  with payload: " + toUtf8(new Uint8Array(eventData.message.payload)));

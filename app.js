@@ -11,12 +11,7 @@ const MqttRouter = require('./routes/mqtt.routes');
 // creación y configuración de la app con Express
 const app = express();  // creación de la app
 const port = process.env.API_PORT;      // definición de puerto para la app
-
-var corsOptions = {
-    origin: 'http://example.com',
-    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
-}
-app.use(cors(corsOptions));
+app.use(cors());
 
 // console.log( process.env );
 

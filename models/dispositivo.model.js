@@ -6,6 +6,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       primaryKey: true
     },
+    nombre_dispositivo: DataTypes.STRING,
     modelo: DataTypes.STRING,
     no_serie: DataTypes.STRING,
   }, {

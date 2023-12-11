@@ -30,7 +30,7 @@ app.get('/', (req, res) => {
     res.json({ message: "Hello  world" });
 });
 // Usuario
-//app.use('/usuarios', UsuarioRouter)
+app.use('/usuarios', UsuarioRouter)
 // Mqtt
 app.use('/mqtt', MqttRouter)
 

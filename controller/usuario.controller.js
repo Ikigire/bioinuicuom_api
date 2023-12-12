@@ -1,22 +1,11 @@
 const Sequelize = require('sequelize');
 const bcrypt = require('bcrypt');
+const validateEntry = require("./../global/validationtools");
 
 const db = require('./../models')
+
+
 const Usuario = db.usuarios; // ORM para la tabla de usuarios
-
-function validateEntry(user, minFields) {
-
-    const keys = Object.keys(user);
-
-    for (let key of keys) {
-        // verificando si el objeto en el cuerpo trae los elementos necesarios
-        if (minFields.includes(key)) {
-            minFields = minFields.filter(value => value != key);
-        }
-    }
-
-    return minFields
-}
 
 
 async function validatePassword(password, hash) {
@@ -34,12 +23,17 @@ module.exports = {
         const user = req.body;
         let minFields = ['nombre', 'email', 'password'];
 
-        minFields = validateEntry(user, minFields);
+        const {minFields:minF, extraFields} = validateEntry(user, minFields);
 
-        if (minFields.length > 0) {
+        if (minF.length > 0 || extraFields.length > 0) {
+            const message = `
+                ${ minF.length>0 ? `Hacen falta los siguientes campos para poder crear un usuario {${minFields.toString()}}`: '' }
+                ${ extraFields.length>0 ? `Los siguientes campos no deben exisir {${extraFields.toString()}}`: '' }
+            
+            `;
             return res.status(400).json({
                 errorType: 'Objeto incompleto',
-                message: `Hacen falta los siguientes campos para poder crear un usuario {${minFields.toString()}}`
+                message
             });
         }
 

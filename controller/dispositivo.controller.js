@@ -4,24 +4,6 @@ const bcrypt = require('bcrypt');
 const db = require('../models')
 const Usuario = db.usuarios; // ORM para la tabla de usuarios
 
-function validateEntry(user, minFields) {
-
-    const keys = Object.keys(user);
-
-    const extraKeys = []
-
-    for (let key of keys) {
-        // verificando si el objeto en el cuerpo trae los elementos necesarios
-        if (minFields.includes(key)) {
-            minFields = minFields.filter(value => value != key);
-        } else
-            extraKeys.push(key);
-    }
-    
-
-    return {minFields, extraKeys}
-}
-
 
 async function validatePassword(password, hash) {
     return await bcrypt.compareSync(password, hash);
@@ -34,24 +16,24 @@ function encryptPassword(password) {
 }
 
 module.exports = {
-    createUsuario: async (req, res) => {
+    createDispositivo: async (req, res) => {
         const user = req.body;
-        let minFields = ['nombre', 'email', 'password'];
+        let minFields = ['mac', 'no_serie', 'modelo'];
 
         const {...rest} = minFields
         console.log(rest);
 
-        const {minFields:minF, extraKeys} = validateEntry(user, minFields);
+        const {minFields:minF, extraFields} = validateEntry(user, minFields);
 
-        if (minF.length > 0 || extraKeys.length > 0) {
+        if (minF.length > 0 || extraFields.length > 0) {
             const message = `
                 ${ minF.length>0 ? `Hacen falta los siguientes campos para poder crear un usuario {${minFields.toString()}}`: '' }
-                ${ extraKeys.length>0 ? `Los siguientes campos no deben exisir {${extraKeys.toString()}}`: '' }
+                ${ extraFields.length>0 ? `Los siguientes campos no deben exisir {${extraFields.toString()}}`: '' }
             
             `;
             return res.status(400).json({
                 errorType: 'Objeto incompleto',
-                message: `Hacen falta los siguientes campos para poder crear un usuario {${minFields.toString()}}`
+                message
             });
         }
 
@@ -70,14 +52,14 @@ module.exports = {
             });
     },
 
-    getAll: async (_, res) => {
+    getAllDispositivos: async (_, res) => {
         const usuarios = await Usuario.findAll({
             attributes: ['user_id', 'nombre', 'email', 'active']
         });
         return res.status(200).json(usuarios);
     },
 
-    getById: async (req, res) => {
+    getDispositivoById: async (req, res) => {
         const id = parseInt(req.params.user_id);
 
         if (isNaN(id)) {
@@ -102,34 +84,8 @@ module.exports = {
         return res.status(200).json(user);
     },
 
-    login: async (req, res) => {
-        const { email, password } = req.params;
-
-        const user = await Usuario.findOne({
-            where: {
-                email
-            }
-        });
-
-        if (user == null) {
-            return res.status(404).json({
-                errorType: "Elemento no encontrado",
-                message: `Email no encontrado`
-            });
-        }
-
-        const correctPassword = await validatePassword(password, user.password);
-        if (!correctPassword) {
-            return res.status(404).json({
-                errorType: "Elemento no encontrado",
-                message: `Password incorrecto`
-            });
-        }
-
-        return res.status(200).json(user);
-    },
-
-    updateUsuario: async (req, res) => {
+    
+    updateDispositivo: async (req, res) => {
         const user_id = parseInt(req.params.user_id);
         const user = req.body;
 

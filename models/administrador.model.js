@@ -1,8 +1,8 @@
 'use strict';
 
 module.exports = (sequelize, DataTypes) => {
-  const Usuario = sequelize.define('usuario', {
-    idUsuario: {
+  const Administrador = sequelize.define('administrador', {
+    idAdministrador: {
       type: DataTypes.BIGINT,
       primaryKey: true,
       autoIncrement: true
@@ -17,5 +17,5 @@ module.exports = (sequelize, DataTypes) => {
     sequelize
   });
 
-  return Usuario;
+  return Administrador;
 };

@@ -7,7 +7,7 @@ var UsuarioRouter = express.Router();
 // Peticiones con verbo GET
 UsuarioRouter.get('/', getAll); // Obtener todos los registros en la tabla
 UsuarioRouter.get('/:user_id', getById);
-UsuarioRouter.get('/login/:email/:password', login);
+UsuarioRouter.post('/login', login);
 
 // Peticiones con verbo POST
 UsuarioRouter.post('/', createUsuario) // Crear nuevbos usuarios

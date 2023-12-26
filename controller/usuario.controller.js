@@ -1,36 +1,35 @@
-const Sequelize = require('sequelize');
-const bcrypt = require('bcrypt');
-const validateEntry = require("./../global/validationtools");
+// const Sequelize = require('sequelize');
+// const bcrypt = require('bcrypt');
+const validateEntry = require("../utils/validation.utils");
+const { encryptPassword, validatePassword } = require('../utils/password.utils')
 
-const db = require('./../models')
+const db = require('./../models');
+const { isRequestBodyPresent } = require("../utils/request.utils");
 
 
 const Usuario = db.usuarios; // ORM para la tabla de usuarios
 
 
-async function validatePassword(password, hash) {
-    return await bcrypt.compareSync(password, hash);
-}
+// async function validatePassword(password, hash) {
+//     return await bcrypt.compareSync(password, hash);
+// }
 
-function encryptPassword(password) {
-    const salt = bcrypt.genSaltSync(10, 'a');
-    password = bcrypt.hashSync(password, salt)
-    return password;
-}
+// function encryptPassword(password) {
+//     const salt = bcrypt.genSaltSync(10, 'a');
+//     password = bcrypt.hashSync(password, salt)
+//     return password;
+// }
 
 module.exports = {
     createUsuario: async (req, res) => {
         const user = req.body;
+
         let minFields = ['nombre', 'email', 'password'];
 
         const {minFields:minF, extraFields} = validateEntry(user, minFields);
 
         if (minF.length > 0 || extraFields.length > 0) {
-            const message = `
-                ${ minF.length>0 ? `Hacen falta los siguientes campos para poder crear un usuario {${minFields.toString()}}`: '' }
-                ${ extraFields.length>0 ? `Los siguientes campos no deben exisir {${extraFields.toString()}}`: '' }
-            
-            `;
+            const message = `${ minF.length>0 ? `Hacen falta los siguientes campos para poder crear un usuario {${minF.toString()}}`: '' }. ${ extraFields.length>0 ? `Los siguientes campos no deben exisir {${extraFields.toString()}}`: '' }`;
             return res.status(400).json({
                 errorType: 'Objeto incompleto',
                 message
@@ -52,9 +51,30 @@ module.exports = {
             });
     },
 
-    getAll: async (_, res) => {
+    getAll: async (req, res) => {
+        const tableFields = ['idUsuario', 'nombre', 'email'];
+        let {fields} = req.query;
+
+        if ( fields !== undefined && fields ){
+            fields = fields.split(",");
+            
+            const finalFIelds = [];
+
+            fields.forEach(field => {
+                field = field.trim()
+                if ( tableFields.includes(field) ){
+                    finalFIelds.push(field);
+                }
+            });
+            fields = finalFIelds;
+        } else {
+            fields = tableFields;
+        }
+
+        console.log(fields);
+        
         const usuarios = await Usuario.findAll({
-            attributes: ['user_id', 'nombre', 'email', 'active']
+            attributes: fields
         });
         return res.status(200).json(usuarios);
     },
@@ -70,7 +90,7 @@ module.exports = {
         }
         const user = await Usuario.findOne({
             where: {
-                user_id: id
+                idUsuario: id
             }
         });
 
@@ -85,7 +105,21 @@ module.exports = {
     },
 
     login: async (req, res) => {
-        const { email, password } = req.params;
+        const loginData = req.body;
+        console.log(loginData);
+
+        let minFields = ['email', 'password'];
+
+        const {minFields:minF, extraFields} = validateEntry(loginData, minFields);
+
+        if (minF.length > 0 || extraFields.length > 0) {
+            const message = `${ minF.length>0 ? `Hacen falta los siguientes campos para poder logear al usuario {${minF.toString()}}`: '' }. ${ extraFields.length>0 ? `Los siguientes campos no deben exisir {${extraFields.toString()}}`: '' }`;
+            return res.status(400).json({
+                errorType: 'Objeto incompleto',
+                message
+            });
+        }
+        const { email, password } = loginData;
 
         const user = await Usuario.findOne({
             where: {
@@ -100,29 +134,29 @@ module.exports = {
             });
         }
 
-        const correctPassword = await validatePassword(password, user.password);
-        if (!correctPassword) {
+        if (!validatePassword(password, user.password)) {
             return res.status(404).json({
                 errorType: "Elemento no encontrado",
                 message: `Password incorrecto`
             });
         }
+        const {password:_, ...usuario} = user.dataValues;
 
-        return res.status(200).json(user);
+        return res.status(200).json(usuario);
     },
 
     updateUsuario: async (req, res) => {
-        const user_id = parseInt(req.params.user_id);
+        const idUsuario = parseInt(req.params.user_id);
         const user = req.body;
 
-        if (user.user_id != user_id) {
+        if (user.idUsuario != idUsuario) {
             return res.status(403).json({
                 errorType: `Movimiento no autorizado`,
                 message: `Los Id del elemento que busca modificar y la información recibida no coinciden`
             })
         }
 
-        let minFields = ['user_id', 'nombre', 'email', 'password'];
+        let minFields = ['idUsuario', 'nombre', 'email', 'password'];
 
         minFields = validateEntry(user, minFields);
 
@@ -133,24 +167,24 @@ module.exports = {
             });
         }
 
-        if (await Usuario.findOne({ where: { user_id } }) == null) {
+        if (await Usuario.findOne({ where: { idUsuario } }) == null) {
             return res.status(404).json({
                 errorType: "Elemento no encontrado",
-                message: `No existe usuario con el ID ${user_id}`
+                message: `No existe usuario con el ID ${idUsuario}`
             });
         }
 
         user.password = encryptPassword(user.password);
 
-        const usuario = await Usuario.update(user, { where: { user_id } })
+        const usuario = await Usuario.update(user, { where: { idUsuario } })
         
         return res.status(200).json(user);
     },
 
     deleteUsuario: async (req, res) => {
-        const user_id = parseInt(req.params.user_id);
+        const idUsuario = parseInt(req.params.idUsuario);
         const user = await Usuario.findOne({
-            where: { user_id }
+            where: { idUsuario }
         })
 
         if (user == null) {
@@ -159,7 +193,7 @@ module.exports = {
                 message: `No existe usuario con el ID ${id}`
             });
         }
-        await Usuario.destroy({ where: { user_id } })
+        await Usuario.destroy({ where: { idUsuario } })
         return res.status(200).json(user);
     }
 }

@@ -26,10 +26,10 @@ module.exports = {
 
         let minFields = ['nombre', 'email', 'password'];
 
-        const {minFields:minF, extraFields} = validateEntry(user, minFields);
+        const { minFields: minF, extraFields } = validateEntry(user, minFields);
 
         if (minF.length > 0 || extraFields.length > 0) {
-            const message = `${ minF.length>0 ? `Hacen falta los siguientes campos para poder crear un usuario {${minF.toString()}}`: '' }. ${ extraFields.length>0 ? `Los siguientes campos no deben exisir {${extraFields.toString()}}`: '' }`;
+            const message = `${minF.length > 0 ? `Hacen falta los siguientes campos para poder crear un usuario {${minF.toString()}}` : ''}. ${extraFields.length > 0 ? `Los siguientes campos no deben exisir {${extraFields.toString()}}` : ''}`;
             return res.status(400).json({
                 errorType: 'Objeto incompleto',
                 message
@@ -53,16 +53,16 @@ module.exports = {
 
     getAll: async (req, res) => {
         const tableFields = ['idUsuario', 'nombre', 'email'];
-        let {fields} = req.query;
+        let { fields } = req.query;
 
-        if ( fields !== undefined && fields ){
+        if (fields !== undefined && fields) {
             fields = fields.split(",");
-            
+
             const finalFIelds = [];
 
             fields.forEach(field => {
                 field = field.trim()
-                if ( tableFields.includes(field) ){
+                if (tableFields.includes(field)) {
                     finalFIelds.push(field);
                 }
             });
@@ -72,7 +72,7 @@ module.exports = {
         }
 
         console.log(fields);
-        
+
         const usuarios = await Usuario.findAll({
             attributes: fields
         });
@@ -110,10 +110,10 @@ module.exports = {
 
         let minFields = ['email', 'password'];
 
-        const {minFields:minF, extraFields} = validateEntry(loginData, minFields);
+        const { minFields: minF, extraFields } = validateEntry(loginData, minFields);
 
         if (minF.length > 0 || extraFields.length > 0) {
-            const message = `${ minF.length>0 ? `Hacen falta los siguientes campos para poder logear al usuario {${minF.toString()}}`: '' }. ${ extraFields.length>0 ? `Los siguientes campos no deben exisir {${extraFields.toString()}}`: '' }`;
+            const message = `${minF.length > 0 ? `Hacen falta los siguientes campos para poder logear al usuario {${minF.toString()}}` : ''}. ${extraFields.length > 0 ? `Los siguientes campos no deben exisir {${extraFields.toString()}}` : ''}`;
             return res.status(400).json({
                 errorType: 'Objeto incompleto',
                 message
@@ -140,7 +140,7 @@ module.exports = {
                 message: `Password incorrecto`
             });
         }
-        const {password:_, ...usuario} = user.dataValues;
+        const { password: _, ...usuario } = user.dataValues;
 
         return res.status(200).json(usuario);
     },
@@ -174,11 +174,18 @@ module.exports = {
             });
         }
 
-        user.password = encryptPassword(user.password);
+        try {
+            user.password = encryptPassword(user.password);
 
-        const usuario = await Usuario.update(user, { where: { idUsuario } })
-        
-        return res.status(200).json(user);
+            const usuario = await Usuario.update(user, { where: { idUsuario } })
+
+            return res.status(200).json(user);
+        } catch (error) {
+            return res.status(400).json({
+                errorType: `${error.errors[0].type}`,
+                message: `${error.errors[0].message}`
+            })
+        }
     },
 
     deleteUsuario: async (req, res) => {

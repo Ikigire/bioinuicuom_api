@@ -1,6 +1,6 @@
 var express = require('express');
 const { getAll, getById, createUsuario, updateUsuario, deleteUsuario, login } = require('../controller/usuario.controller');
-var UsuarioRouter = express.Router();
+const UsuarioRouter = express.Router();
 
 
 // Definiendo los endpoints para la tabla de Usuarios

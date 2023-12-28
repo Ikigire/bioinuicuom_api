@@ -2,7 +2,7 @@
 
 module.exports = (sequelize, DataTypes) => {
   const Est_Dispositivo = sequelize.define('est_dispositivo', {
-    idStab: {
+    idEstab: {
       type: DataTypes.BIGINT,
       references: {
         model: 'establecimientos',

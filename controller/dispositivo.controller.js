@@ -138,21 +138,8 @@ module.exports = {
                 message: 'El Id de usuario o nombre de Establecimiento no fue recibido o está mal formateado'
             });
         }
-        // const relaciones = await Est_Dispositivo.findAll({
-        //     where:
-        //     {
-        //         idUsuario
-        //     }
-        // });
 
-        // if (relaciones == null) {
-        //     return res.status(404).json({
-        //         errorType: "Elemento no encontrado",
-        //         message: `No existe usuario con el ID ${id}`
-        //     });
-        // }
-
-        const dispositivos = await sequelize.query(`SELECT d.idDispositivo, d.nombreDispositivo, d.modelo, g.grupo FROM dispositivos AS d JOIN est_dispositivos AS ed ON d.idDispositivo = ed.idDispositivo JOIN grupos as g ON ed.idGrupo = g.idGrupo JOIN establecimientos AS e ON e.idEstab = ed.idEstab JOIN usuario_estabs AS ue ON e.idEstab = ue.idEstab WHERE e.establecimiento = '${estab}' AND ue.idUsuario = ${idUsuario}; `, 
+        const dispositivos = await sequelize.query(`SELECT d.idDispositivo, d.nombreDispositivo, d.modelo, e.establecimiento, g.grupo FROM dispositivos AS d JOIN est_dispositivos AS ed ON d.idDispositivo = ed.idDispositivo JOIN grupos as g ON ed.idGrupo = g.idGrupo JOIN establecimientos AS e ON e.idEstab = ed.idEstab JOIN usuario_estabs AS ue ON e.idEstab = ue.idEstab WHERE e.establecimiento = '${estab}' AND ue.idUsuario = ${idUsuario}; `, 
         {
             type: QueryTypes.SELECT
         });
@@ -160,6 +147,23 @@ module.exports = {
         return res.status(200).json(dispositivos);
     },
 
+    getDispositivosByUsuario: async (req, res) => {
+        const idUsuario = parseInt(req.params.idUsuario);
+
+        if (!idUsuario) {
+            return res.status(400).json({
+                errorType: 'Bad Request',
+                message: 'El Id de Usuario no fue recibido o está mal formateado'
+            });
+        }
+
+        const dispositivos = await sequelize.query(`SELECT d.idDispositivo, d.nombreDispositivo, d.modelo, e.establecimiento, g.grupo FROM dispositivos AS d JOIN est_dispositivos AS ed ON d.idDispositivo = ed.idDispositivo JOIN grupos as g ON ed.idGrupo = g.idGrupo JOIN establecimientos AS e ON e.idEstab = ed.idEstab JOIN usuario_estabs AS ue ON e.idEstab = ue.idEstab WHERE ue.idUsuario = ${idUsuario} ORDER BY e.establecimiento, g.grupo;`,
+        {
+            type: QueryTypes.SELECT
+        });
+
+        return res.status(200).json(dispositivos);
+    },
 
     updateDispositivo: async (req, res) => {
         const idDispositivo = req.params.idDispositivo;

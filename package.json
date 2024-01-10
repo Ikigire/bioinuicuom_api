@@ -28,6 +28,9 @@
     "sequelize": "^6.35.1"
   },
   "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.4",
+    "@types/sequelize": "^4.28.19",
     "nodemon": "^3.0.1",
     "sequelize-cli": "^6.6.2"
   }

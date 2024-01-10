@@ -6,6 +6,9 @@ const cors = require('cors')
 
 const UsuarioRouter = require('./routes/usuario.routes');
 const MqttRouter = require('./routes/mqtt.routes');
+const DispositivoRouter = require('./routes/dispositivos.routes');
+const EstablecimientoRouter  = require('./routes/establecimiento.routes');
+const GrupoRouter = require('./routes/grupo.routes');
 
 
 // creación y configuración de la app con Express
@@ -29,10 +32,19 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.get('/', (req, res) => {
     res.json({ message: "Hello  world" });
 });
+
 // Usuario
-//app.use('/usuarios', UsuarioRouter)
+app.use('/usuarios', UsuarioRouter);
+// Establecimientos
+app.use('/establecimientos', EstablecimientoRouter);
+// Grupos
+app.use('/grupos', GrupoRouter);
+// Dispositivos
+app.use('/dispositivos', DispositivoRouter);
+
+
 // Mqtt
-app.use('/mqtt', MqttRouter)
+app.use('/mqtt', MqttRouter);
 
 app.listen(port, () => {
     console.log(`Escuchando por peticiones en localhost${port}`);

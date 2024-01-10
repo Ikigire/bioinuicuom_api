@@ -2,12 +2,12 @@
 
 module.exports = (sequelize, DataTypes) => {
   const Dispositivo = sequelize.define('dispositivo', {
-    mac: {
+    idDispositivo: {
       type: DataTypes.STRING,
       primaryKey: true
     },
+    nombreDispositivo: DataTypes.STRING,
     modelo: DataTypes.STRING,
-    no_serie: DataTypes.STRING,
   }, {
     sequelize
   });

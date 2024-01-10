@@ -95,7 +95,7 @@ module.exports = {
                     errorType: 'TimeOut expirado',
                     message: `No fue posible conectarse con el dispositivo`
                 });
-            }, 12000);
+            }, 8000);
         });
 
 

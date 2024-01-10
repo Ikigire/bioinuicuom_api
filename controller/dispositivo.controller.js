@@ -79,20 +79,25 @@ module.exports = {
                 message: 'El Id de dispositivo no fue recibido o está mal formateado'
             });
         }
-        const dispositivo = await Dispositivos.findOne({
-            where: {
-                idDispositivo: id
-            }
+        // const dispositivo = await Dispositivos.findOne({
+        //     where: {
+        //         idDispositivo: id
+        //     }
+        // });
+
+        const dispositivo = await sequelize.query(`SELECT d.idDispositivo, d.nombreDispositivo, d.modelo, e.establecimiento, g.grupo FROM dispositivos AS d JOIN est_dispositivos AS ed ON d.idDispositivo = ed.idDispositivo JOIN grupos as g ON ed.idGrupo = g.idGrupo JOIN establecimientos AS e ON e.idEstab = ed.idEstab JOIN usuario_estabs AS ue ON e.idEstab = ue.idEstab WHERE d.idDispositivo = '${id}'`,
+        {
+            type: QueryTypes.SELECT
         });
 
-        if (dispositivo == null) {
+        if (dispositivo == null || dispositivo.length == 0) {
             return res.status(404).json({
                 errorType: "Elemento no encontrado",
                 message: `No existe usuario con el ID ${id}`
             });
         }
 
-        return res.status(200).json(dispositivo);
+        return res.status(200).json(dispositivo[0]);
     },
 
     getDispositivosByIdEstab: async (req, res) => {

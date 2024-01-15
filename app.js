@@ -9,6 +9,7 @@ const MqttRouter = require('./routes/mqtt.routes');
 const DispositivoRouter = require('./routes/dispositivos.routes');
 const EstablecimientoRouter  = require('./routes/establecimiento.routes');
 const GrupoRouter = require('./routes/grupo.routes');
+const DynamoDbRouter = require('./routes/dynamodb.routes');
 
 
 // creación y configuración de la app con Express
@@ -42,9 +43,11 @@ app.use('/grupos', GrupoRouter);
 // Dispositivos
 app.use('/dispositivos', DispositivoRouter);
 
-
+// AWS ROUTES
 // Mqtt
 app.use('/mqtt', MqttRouter);
+// DynamoDB
+app.use('/historical', DynamoDbRouter);
 
 app.listen(port, () => {
     console.log(`Escuchando por peticiones en localhost${port}`);

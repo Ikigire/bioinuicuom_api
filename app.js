@@ -10,6 +10,7 @@ const DispositivoRouter = require('./routes/dispositivos.routes');
 const EstablecimientoRouter  = require('./routes/establecimiento.routes');
 const GrupoRouter = require('./routes/grupo.routes');
 const DynamoDbRouter = require('./routes/dynamodb.routes');
+const ValidationCodesRouter = require('./routes/validation_codes.routes');
 
 
 // creación y configuración de la app con Express
@@ -42,6 +43,9 @@ app.use('/establecimientos', EstablecimientoRouter);
 app.use('/grupos', GrupoRouter);
 // Dispositivos
 app.use('/dispositivos', DispositivoRouter);
+
+// Validation codes
+app.use('/codes', ValidationCodesRouter)
 
 // AWS ROUTES
 // Mqtt

@@ -125,7 +125,7 @@ module.exports = ({
         }
 
         const email = String(body.email);
-        const code  = String(body.code);
+        const code = String(body.code);
 
         const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g;
         const match = email.match(emailRegex);
@@ -143,14 +143,11 @@ module.exports = ({
             }
         })
             .then(validationCode => {
-                if (!validationCode){
-                    return res.status(404).json({
-                        errorType: 'Recurso no encontrado',
-                        message: `No existe el código ${code} registrado para el correo ${email}`
-                    });
+                if (!validationCode) {
+                    throw new Error(`No existe el código ${code} registrado para el correo ${email}`);
                 }
 
-                return ValidationCodeModel.destroy({where: { email }})
+                return ValidationCodeModel.destroy({ where: { email } })
             })
             .then(() => {
                 return Usuario.findOne({
@@ -161,16 +158,22 @@ module.exports = ({
             })
             .then(fulluser => {
                 if (!fulluser)
-                    return res.status(200).json({email, code, status: 'Valid'})
+                    return res.status(200).json({ email, code, status: 'Valid' })
 
-                const {password, createdAt, updatedAt, ...user} = fulluser
+                const { password, createdAt, updatedAt, ...user } = fulluser
                 return res.status(200).json(user);
             })
             .catch(error => {
-                return res.status(500).json({
-                    errorType: 'Internal Server Error',
+                if (error.message.indexOf("No existe") < 0)
+                    return res.status(500).json({
+                        errorType: 'Internal Server Error',
+                        message: error.message
+                    });
+
+                return res.status(404).json({
+                    errorType: 'Invalid code',
                     message: error.message
                 });
-            })
+            });
     }
 });

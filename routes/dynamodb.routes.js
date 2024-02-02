@@ -1,5 +1,5 @@
 var express = require('express');
-const { getHistoricalData, getDatesRange } = require('../controller/dynamodb');
+const { getHistoricalData, getDatesRange, getGraphicData } = require('../controller/dynamodb');
 
 var DynamoDbRouter = express.Router();
 
@@ -7,7 +7,8 @@ var DynamoDbRouter = express.Router();
 // Definiendo los endpoints para la tabla de Usuarios
 // Peticiones con verbo GET
 // UsuarioRouter.get('/', getAll); // Obtener todos los registros en la tabla
-DynamoDbRouter.get('/:mac', getHistoricalData);
+DynamoDbRouter.get('/:mac/pagination', getHistoricalData);
+DynamoDbRouter.get('/:mac/graphic', getGraphicData);
 DynamoDbRouter.get('/:mac/datesrange', getDatesRange);
 // UsuarioRouter.get('/login/:email/:password', login);
 

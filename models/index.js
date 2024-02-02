@@ -12,6 +12,7 @@ const admon_usuarioModel = require('./admon_usuario.model');
 const usuario_estabModel = require('./usuario_estab.model');
 const disp_sensorModel = require('./disp_sensor.model');
 const est_dispositivoModel = require('./est_dispositivo.model');
+const validation_codesModel = require('./validation_codes.model');
 const db = {};
 
 let sequelize = new Sequelize(
@@ -50,6 +51,9 @@ const Usuario_Estab = usuario_estabModel(sequelize, Sequelize.DataTypes);
 const Disp_Sensor = disp_sensorModel(sequelize, Sequelize.DataTypes);
 const Est_Dispositivo = est_dispositivoModel(sequelize, Sequelize.DataTypes);
 
+// Tablas Apoyo 
+const ValidationCodes = validation_codesModel(sequelize, Sequelize.DataTypes);
+
 // Creando las relaciones
 // Administrador.belongsToMany(Usuario, { through: Admon_Usuario });
 // Usuario.belongsToMany(Administrador, { through: Admon_Usuario });
@@ -78,6 +82,9 @@ db.admon_usuario = Admon_Usuario;
 db.usuario_estab = Usuario_Estab;
 db.disp_sensor = Disp_Sensor;
 db.est_dispositivo = Est_Dispositivo;
+
+// Tablas apoyo
+db.validation_codes = ValidationCodes;
 
 
 

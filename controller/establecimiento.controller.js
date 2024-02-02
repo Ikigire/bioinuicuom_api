@@ -16,7 +16,7 @@ module.exports = {
         const { minFields: minF, extraFields } = validateEntry(establecimiento, minFields);
 
         if (minF.length > 0 || extraFields.length > 0) {
-            const message = `${minF.length > 0 ? `Hacen falta los siguientes campos para poder crear un establecimiento {${minFields.toString()}}` : ''}${extraFields.length > 0 ? `\nLos siguientes campos no deben exisir {${extraFields.toString()}}` : ''}`;
+            const message = `${minF.length > 0 ? `Hacen falta los siguientes campos para poder crear un establecimiento {${minF.toString()}}` : ''}${extraFields.length > 0 ? `\nLos siguientes campos no deben exisir {${extraFields.toString()}}` : ''}`;
             return res.status(400).json({
                 errorType: 'Objeto incompleto',
                 message

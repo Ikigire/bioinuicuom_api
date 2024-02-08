@@ -5,9 +5,12 @@ const { encryptPassword, validatePassword } = require('../utils/password.utils')
 
 const db = require('./../models');
 const { isRequestBodyPresent } = require("../utils/request.utils");
+const { QueryTypes } = require("sequelize");
 
 
 const Usuario = db.usuarios; // ORM para la tabla de usuarios
+
+const sequelize = db.sequelize;
 
 
 // async function validatePassword(password, hash) {
@@ -156,34 +159,60 @@ module.exports = {
             })
         }
 
-        let minFields = ['idUsuario', 'nombre', 'email', 'password'];
+        let minFields = ['idUsuario', 'nombre', 'email'];
 
-        minFields = validateEntry(user, minFields);
+        let { minFields: minF, extraFields } = validateEntry(user, minFields);
 
-        if (minFields.length > 0) {
+        if (minF.length > 0) {
             return res.status(400).json({
                 errorType: 'Objeto incompleto',
-                message: `Hacen falta los siguientes campos para poder modificar la información del usuario {${minFields.toString()}}`
+                message: `Hacen falta los siguientes campos para poder modificar la información del usuario {${minF.toString()}}`
             });
         }
 
+        if (extraFields.includes('password'))
+            extraFields = extraFields.filter((value) => value != 'password');
+
+
+        if (extraFields.length > 0) {
+            return res.status(400).json({
+                errorType: 'Objeto mal formateado',
+                message: `Los siguientes campos no deben existir: {${extraFields.toString()}}`
+            });
+        }
+        
         if (await Usuario.findOne({ where: { idUsuario } }) == null) {
             return res.status(404).json({
                 errorType: "Elemento no encontrado",
                 message: `No existe usuario con el ID ${idUsuario}`
             });
         }
-
+        
         try {
-            user.password = encryptPassword(user.password);
+            let usuario = {};
+            if (user.password) {
+                user.password = encryptPassword(user.password);
 
-            const usuario = await Usuario.update(user, { where: { idUsuario } })
+                await sequelize.query(`UPDATE usuarios SET nombre='${user.nombre}', password = '${user.password}' WHERE idUsuario = ${idUsuario}`,
+                    {
+                        type: QueryTypes.UPDATE
+                    });
+                usuario = await Usuario.findOne({ where: {idUsuario} });
+            } else {
+                await sequelize.query(`UPDATE usuarios SET nombre='${user.nombre}' WHERE idUsuario = ${idUsuario}`,
+                    {
+                        type: QueryTypes.UPDATE
+                    });
+                usuario = await Usuario.findOne({ where: {idUsuario} });
+            }
 
-            return res.status(200).json(user);
+
+            return res.status(200).json(usuario);
         } catch (error) {
+            console.log(error);
             return res.status(400).json({
-                errorType: `${error.errors[0].type}`,
-                message: `${error.errors[0].message}`
+                errorType: `Error`,
+                message: `${error.message}`
             })
         }
     },

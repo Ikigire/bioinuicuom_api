@@ -177,29 +177,41 @@ module.exports = {
                 let medianTemp = 0, medianHumi = 0;
 
                 if (data.Items.length % 2 == 0) {
-                    medianTemp = ((+data.Items[data.Items.length / 2].t.S + +data.Items[data.Items.length / 2 + 1].t.S) / 2).toFixed(2);
-                    medianHumi = ((+data.Items[data.Items.length / 2].h.S + +data.Items[data.Items.length / 2 + 1].h.S) / 2).toFixed(2);
+                    console.log(`
+                        Valores as evaluar
+                    `);
+                    medianTemp = ((parseFloat(data.Items[data.Items.length / 2].t.S ?? data.Items[data.Items.length / 2].t.N) + parseFloat(data.Items[data.Items.length / 2 + 1].t.S ?? data.Items[data.Items.length / 2 + 1].t.N)) / 2).toFixed(2);
+                    medianHumi = ((parseFloat(data.Items[data.Items.length / 2].h.S ?? data.Items[data.Items.length / 2].h.N) + parseFloat(data.Items[data.Items.length / 2 + 1].h.S ?? data.Items[data.Items.length / 2 + 1].h.N)) / 2).toFixed(2);
                 } else {
-                    medianTemp = (+data.Items[Math.trunc(data.Items.length / 2)].t.S).toFixed(2);
-                    medianHumi = (+data.Items[Math.trunc(data.Items.length / 2)].h.S).toFixed(2);
+                    medianTemp = (+(data.Items[Math.trunc(data.Items.length / 2)].t.S ?? data.Items[Math.trunc(data.Items.length / 2)].t.N)).toFixed(2);
+                    medianHumi = (+(data.Items[Math.trunc(data.Items.length / 2)].h.S ?? data.Items[Math.trunc(data.Items.length / 2)].h.N)).toFixed(2);
                 }
 
                 let hashMapTemp = {},
                     hashMapHumi = {};
 
                 data.Items.forEach((val) => {
-                    if (!hashMapTemp[Math.trunc(+val.t.S ?? +val.t.N).toString()]) {
-                        hashMapTemp[Math.trunc(+val.t.S ?? +val.t.N).toString()] = 1;
+                    if (!parseFloat(val.t.S ?? val.t.N).toFixed(2))
+                    // if (!Math.trunc(val.t.S ?? val.t.N))
+                        console.info(`TEmp mal formateado encontrado: ${val.t.S ?? val.t.N}`)
+                    
+                    if (!Math.trunc(val.h.S ?? val.h.N))
+                        console.info(`HUmi mal formateado encontrado: ${val.t.S ?? val.t.N}`)
+
+                    if (!hashMapTemp[Math.trunc(parseFloat(val.t.S ?? val.t.N)).toString()]) {
+                        hashMapTemp[Math.trunc(parseFloat(val.t.S ?? val.t.N)).toString()] = 1;
                     } else {
-                        hashMapTemp[Math.trunc(+val.t.S ?? +val.t.N).toString()] += 1;
+                        hashMapTemp[Math.trunc(parseFloat(val.t.S ?? val.t.N)).toString()] += 1;
                     }
 
-                    if (!hashMapHumi[Math.trunc(+val.h.S ?? +val.h.N).toString()]) {
-                        hashMapHumi[Math.trunc(+val.h.S ?? +val.h.N).toString()] = 1;
+                    if (!hashMapHumi[Math.trunc(parseFloat(val.h.S ?? val.h.N)).toString()]) {
+                        hashMapHumi[Math.trunc(parseFloat(val.h.S ?? val.h.N)).toString()] = 1;
                     } else {
-                        hashMapHumi[Math.trunc(+val.h.S ?? +val.h.N).toString()] += 1;
+                        hashMapHumi[Math.trunc(parseFloat(val.h.S ?? val.h.N)).toString()] += 1;
                     }
                 })
+
+                // console.log(hashMapTemp);
 
                 let temps = Object.keys(hashMapTemp), tempCounts = Object.values(hashMapTemp);
                 let modeTemp = temps[tempCounts.indexOf(Math.max(...tempCounts))];

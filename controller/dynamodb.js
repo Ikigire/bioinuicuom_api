@@ -93,7 +93,7 @@ module.exports = {
             .then(data => {
                 // console.log("Última página: ", data.Items.length / 50);
                 let results = [];
-                let temperature = [], humidity = [];
+                let temperature = [], humidity = [], co2 = [], boc = [];
                 let actual = 0;
                 console.log(`Datos para trabajar ${data.Items.length}\n`, data.Items.slice(0, 5));
 
@@ -114,28 +114,47 @@ module.exports = {
 
                     humidity = filteredData.map(value => parseFloat(value.h.S ?? value.h.N).toFixed(2));
 
-                    console.log(`\nTemperaturas vuelta numero ${actual}:`, temperature.length, temperature.slice(0, 5));
+                    co2 = filteredData.map(value => parseFloat(value.c.S ?? value.c.N).toFixed(2));
+
+                    boc = filteredData.map(value => parseFloat(value.v.S ?? value.v.N).toFixed(2));
+
+                    console.log(`\nDatos vuelta numero ${actual}:`, `\nTemperaturas: ${temperature.length} [${temperature.slice(0, 5)}]`, `\nHumedad: ${humidity.length} [${humidity.slice(0, 5)}]`, `\nCO2: ${co2.length} [${co2.slice(0, 5)}]`, `\nBOC: ${boc.length} [${boc.slice(0, 5)}]`);
 
                     let maxTemp = 0;
                     let maxHumi = 0;
+                    let maxCo2 = 0;
+                    let maxBoc = 0;
                     let minTemp = 0;
                     let minHumi = 0;
+                    let minCo2 = 0;
+                    let minBoc = 0;
                     let meanTemp = 0;
                     let meanHumi = 0;
+                    let meanCo2 = 0;
+                    let meanBoc = 0;
 
                     if (filteredData.length) {
+                        // Calculando máximos
                         maxTemp = Math.max(...temperature).toFixed(2);
                         maxHumi = Math.max(...humidity).toFixed(2);
+                        maxCo2 = Math.max(...co2).toFixed(2);
+                        maxBoc = Math.max(...boc).toFixed(2);
                         // console.log(`Máxima temperatura del valor actual ${actual} ${maxTemp}`)
                         // console.log(`Máxima humedad del valor actual ${actual} ${maxHumi}`)
 
+                        // Calculando Mínimos
                         minTemp = Math.min(...temperature).toFixed(2);
                         minHumi = Math.min(...humidity).toFixed(2);
+                        minCo2 = Math.min(...co2).toFixed(2);
+                        minBoc = Math.min(...boc).toFixed(2);
                         // console.log(`Mínima temperatura del valor actual ${actual} ${minTemp}`)
                         // console.log(`Mínima humedad del valor actual ${actual} ${minHumi}`)
 
+                        // Calculando Promedios
                         meanTemp = (temperature.reduce((prev, next) => parseFloat(prev) + parseFloat(next), 0) / temperature.length).toFixed(2);
                         meanHumi = (humidity.reduce((prev, next) => parseFloat(prev) + parseFloat(next), 0) / humidity.length).toFixed(2);
+                        meanCo2 = (co2.reduce((prev, next) => parseFloat(prev) + parseFloat(next), 0) / co2.length).toFixed(2);
+                        meanBoc = (boc.reduce((prev, next) => parseFloat(prev) + parseFloat(next), 0) / boc.length).toFixed(2);
                         // console.log(`Promedio temperatura del valor actual ${actual} ${meanTemp}`)
                         // console.log(`Promedio humedad del valor actual ${actual} ${meanHumi}\n`)
                     }
@@ -145,15 +164,21 @@ module.exports = {
                         name: `${intervalName} ${actual}`,
                         max: {
                             temp: maxTemp,
-                            humidity: maxHumi
+                            humidity: maxHumi,
+                            co2: maxCo2,
+                            voc: maxBoc,
                         },
                         min: {
                             temp: minTemp,
-                            humidity: minHumi
+                            humidity: minHumi,
+                            co2: minCo2,
+                            voc: minBoc,
                         },
                         mean: {
                             temp: meanTemp,
                             humidity: meanHumi,
+                            co2: meanCo2,
+                            voc: meanBoc,
                         }
                     });
                 }
@@ -170,33 +195,41 @@ module.exports = {
                 //     meanHumi = (+data.Items.reduce((prev, next) => ({ h: { S: parseFloat(prev.h.S) + parseFloat(next.h.S) } }), { h: { S: 0 } }));
 
                 let meanTemp = (data.Items.map((val) => parseFloat(val.t.S ?? val.t.N)).reduce((prev, next) => prev + next, 0) / data.Items.length).toFixed(2),
-                    meanHumi = (data.Items.map((val) => parseFloat(val.h.S ?? val.h.N)).reduce((prev, next) => prev + next, 0) / data.Items.length).toFixed(2);
+                    meanHumi = (data.Items.map((val) => parseFloat(val.h.S ?? val.h.N)).reduce((prev, next) => prev + next, 0) / data.Items.length).toFixed(2),
+                    meanCo2 = (data.Items.map((val) => parseFloat(val.c.S ?? val.c.N)).reduce((prev, next) => prev + next, 0) / data.Items.length).toFixed(2),
+                    meanBoc = (data.Items.map((val) => parseFloat(val.v.S ?? val.v.N)).reduce((prev, next) => prev + next, 0) / data.Items.length).toFixed(2);
 
-                console.log(`Suma de temp: ${meanTemp}\nSuma de Humi: ${meanHumi}`);
+                console.log(`Promedio de temp: ${meanTemp}\Promedio de Humi: ${meanHumi}\Promedio de CO2: ${meanCo2}\Promedio de Boc: ${meanBoc}`);
 
-                let medianTemp = 0, medianHumi = 0;
+                let medianTemp = 0, medianHumi = 0, medianCo2 = 0, medianBoc = 0;
 
                 if (data.Items.length % 2 == 0) {
-                    console.log(`
-                        Valores as evaluar
-                    `);
+                    // console.log(`
+                    //     Valores as evaluar
+                    // `);
                     medianTemp = ((parseFloat(data.Items[data.Items.length / 2].t.S ?? data.Items[data.Items.length / 2].t.N) + parseFloat(data.Items[data.Items.length / 2 + 1].t.S ?? data.Items[data.Items.length / 2 + 1].t.N)) / 2).toFixed(2);
                     medianHumi = ((parseFloat(data.Items[data.Items.length / 2].h.S ?? data.Items[data.Items.length / 2].h.N) + parseFloat(data.Items[data.Items.length / 2 + 1].h.S ?? data.Items[data.Items.length / 2 + 1].h.N)) / 2).toFixed(2);
+                    medianCo2 = ((parseFloat(data.Items[data.Items.length / 2].c.S ?? data.Items[data.Items.length / 2].c.N) + parseFloat(data.Items[data.Items.length / 2 + 1].c.S ?? data.Items[data.Items.length / 2 + 1].c.N)) / 2).toFixed(2);
+                    medianBoc = ((parseFloat(data.Items[data.Items.length / 2].v.S ?? data.Items[data.Items.length / 2].v.N) + parseFloat(data.Items[data.Items.length / 2 + 1].v.S ?? data.Items[data.Items.length / 2 + 1].v.N)) / 2).toFixed(2);
                 } else {
                     medianTemp = (+(data.Items[Math.trunc(data.Items.length / 2)].t.S ?? data.Items[Math.trunc(data.Items.length / 2)].t.N)).toFixed(2);
                     medianHumi = (+(data.Items[Math.trunc(data.Items.length / 2)].h.S ?? data.Items[Math.trunc(data.Items.length / 2)].h.N)).toFixed(2);
+                    medianCo2 = (+(data.Items[Math.trunc(data.Items.length / 2)].c.S ?? data.Items[Math.trunc(data.Items.length / 2)].c.N)).toFixed(2);
+                    medianBoc = (+(data.Items[Math.trunc(data.Items.length / 2)].v.S ?? data.Items[Math.trunc(data.Items.length / 2)].v.N)).toFixed(2);
                 }
 
                 let hashMapTemp = {},
-                    hashMapHumi = {};
+                    hashMapHumi = {},
+                    hashMapCo2 = {},
+                    hashMapBoc = {};
 
                 data.Items.forEach((val) => {
-                    if (!parseFloat(val.t.S ?? val.t.N).toFixed(2))
+                    // if (!parseFloat(val.t.S ?? val.t.N).toFixed(2))
                     // if (!Math.trunc(val.t.S ?? val.t.N))
-                        console.info(`TEmp mal formateado encontrado: ${val.t.S ?? val.t.N}`)
+                    //     console.info(`TEmp mal formateado encontrado: ${val.t.S ?? val.t.N}`)
                     
-                    if (!Math.trunc(val.h.S ?? val.h.N))
-                        console.info(`HUmi mal formateado encontrado: ${val.t.S ?? val.t.N}`)
+                    // if (!Math.trunc(val.h.S ?? val.h.N))
+                    //     console.info(`HUmi mal formateado encontrado: ${val.t.S ?? val.t.N}`)
 
                     if (!hashMapTemp[Math.trunc(parseFloat(val.t.S ?? val.t.N)).toString()]) {
                         hashMapTemp[Math.trunc(parseFloat(val.t.S ?? val.t.N)).toString()] = 1;
@@ -209,6 +242,17 @@ module.exports = {
                     } else {
                         hashMapHumi[Math.trunc(parseFloat(val.h.S ?? val.h.N)).toString()] += 1;
                     }
+                    if (!hashMapCo2[Math.trunc(parseFloat(val.c.S ?? val.c.N)).toString()]) {
+                        hashMapCo2[Math.trunc(parseFloat(val.c.S ?? val.c.N)).toString()] = 1;
+                    } else {
+                        hashMapCo2[Math.trunc(parseFloat(val.c.S ?? val.c.N)).toString()] += 1;
+                    }
+
+                    if (!hashMapBoc[Math.trunc(parseFloat(val.v.S ?? val.v.N)).toString()]) {
+                        hashMapBoc[Math.trunc(parseFloat(val.v.S ?? val.v.N)).toString()] = 1;
+                    } else {
+                        hashMapBoc[Math.trunc(parseFloat(val.v.S ?? val.v.N)).toString()] += 1;
+                    }
                 })
 
                 // console.log(hashMapTemp);
@@ -219,18 +263,30 @@ module.exports = {
                 let humis = Object.keys(hashMapHumi), humisCounts = Object.values(hashMapHumi);
                 let modehumi = humis[humisCounts.indexOf(Math.max(...humisCounts))];
 
+                let co2s = Object.keys(hashMapCo2), co2Counts = Object.values(hashMapHumi);
+                let modeCo2 = co2s[co2Counts.indexOf(Math.max(...co2Counts))];
+
+                let bocs = Object.keys(hashMapBoc), bocCounts = Object.values(hashMapHumi);
+                let modeBoc = bocs[bocCounts.indexOf(Math.max(...bocCounts))];
+
                 return res.status(200).json({
                     mean: {
                         temp: meanTemp,
-                        humidity: meanHumi
+                        humidity: meanHumi,
+                        co2: meanCo2,
+                        voc: meanBoc
                     },
                     mode: {
                         temp: modeTemp,
-                        humidity: modehumi
+                        humidity: modehumi,
+                        co2:modeCo2, 
+                        voc: modeBoc
                     },
                     median: {
                         temp: medianTemp,
-                        humidity: medianHumi
+                        humidity: medianHumi,
+                        co2: medianCo2,
+                        voc: medianBoc
                     },
                     results
                 })

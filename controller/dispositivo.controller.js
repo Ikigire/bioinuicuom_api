@@ -3,66 +3,60 @@ const db = require('../models');
 const validateEntry = require('../utils/validation.utils');
 
 const Dispositivos = db.dispositivos; // ORM para la tabla de Dispositivos
-const Est_Dispositivo = db.est_dispositivo;
-
+const Ubi_Dispositivo = db.ubi_dispositivos;
+const Disp_Usuario = db.disp_usuario; // ORM para la tabla de Disp_Usuario
 const sequelize = db.sequelize;
-
-
-
 
 module.exports = {
     createDispositivo: async (req, res) => {
         let dispositivo = req.body;
-        let minFields = ['idDispositivo', 'nombreDispositivo', 'modelo', 'idGrupo', 'idEstab'];
+        let minFields = ['idDispositivo', 'modelo', 'ubicacion', 'zona'];
 
         const { minFields: minF, extraFields } = validateEntry(dispositivo, minFields);
 
         if (minF.length > 0 || extraFields.length > 0) {
             const message = `${minF.length > 0 ? `Hacen falta los siguientes campos para poder crear un dispositivo {${minF.toString()}}` : ''}
-                ${extraFields.length > 0 ? `Los siguientes campos no deben exisir {${extraFields.toString()}}` : ''}`;
+                ${extraFields.length > 0 ? `Los siguientes campos no deben existir {${extraFields.toString()}}` : ''}`;
             return res.status(400).json({
                 errorType: 'Objeto incompleto',
                 message
             });
         }
 
-        const { idGrupo, idEstab, ...device } = dispositivo;
-        const { nombreDispositivo, modelo, ...est_dispositivo } = dispositivo;
+        const { idUbicacion, ...device } = dispositivo;
+        const { modelo, ...ubi_dispositivo } = dispositivo;
 
         Dispositivos.create(device)
             .then(disp => {
                 dispositivo = disp;
-                return Est_Dispositivo.create(est_dispositivo);
+                return Ubi_Dispositivo.create(ubi_dispositivo);
             })
-            .then((est_disp) => {
+            .then((ubi_dispositivo) => {
                 return res.status(200).json({
                     dispositivo,
-                    est_disp
+                    ubi_dispositivo
                 });
             })
             .catch(async error => {
-                if ( dispositivo.createdAt ) {
-                    await Dispositivos.destroy({where: {idDispositivo: dispositivo.idDispositivo}});
+                if (dispositivo.createdAt) {
+                    await Dispositivos.destroy({ where: { idDispositivo: dispositivo.idDispositivo } });
                 }
                 return res.status(400).json({
                     errorType: `${error.name}`,
-                    message: `No se puedo crear el Establecimiento`
+                    message: `No se pudo crear el dispositivo`
                 });
             });
     },
 
     getAllDispositivos: async (req, res) => {
-        const tableFields = ['idDispositivo', 'nombreDispositivo', 'modelo'];
+        const tableFields = ['idDispositivo', 'modelo'];
         let { fields } = req.query;
 
-        if (fields ?? false) {
-            fields = fields.split(",");
-            fields = fields.filter(field => {
-                field = field.trim();
-                return tableFields.includes(field);
-            });
-        } else
+        if (fields) {
+            fields = fields.split(",").map(field => field.trim()).filter(field => tableFields.includes(field));
+        } else {
             fields = tableFields;
+        }
 
         const dispositivos = await Dispositivos.findAll({
             attributes: fields
@@ -79,21 +73,21 @@ module.exports = {
                 message: 'El Id de dispositivo no fue recibido o está mal formateado'
             });
         }
-        // const dispositivo = await Dispositivos.findOne({
-        //     where: {
-        //         idDispositivo: id
-        //     }
-        // });
 
-        const dispositivo = await sequelize.query(`SELECT d.idDispositivo, d.nombreDispositivo, d.modelo, e.establecimiento, g.grupo FROM dispositivos AS d JOIN est_dispositivos AS ed ON d.idDispositivo = ed.idDispositivo JOIN grupos as g ON ed.idGrupo = g.idGrupo JOIN establecimientos AS e ON e.idEstab = ed.idEstab JOIN usuario_estabs AS ue ON e.idEstab = ue.idEstab WHERE d.idDispositivo = '${id}'`,
-        {
+        const dispositivo = await sequelize.query(`
+            SELECT d.idDispositivo, d.modelo, u.ubicacion, u.zona
+            FROM dispositivos d
+            INNER JOIN ubi_dispositivos u ON d.idDispositivo = u.idDispositivo
+            WHERE d.idDispositivo = :id
+        `, {
+            replacements: { id },
             type: QueryTypes.SELECT
         });
 
         if (dispositivo == null || dispositivo.length == 0) {
             return res.status(404).json({
                 errorType: "Elemento no encontrado",
-                message: `No existe usuario con el ID ${id}`
+                message: `No existe dispositivo con el ID ${id}`
             });
         }
 
@@ -101,53 +95,34 @@ module.exports = {
     },
 
     getDispositivosByIdEstab: async (req, res) => {
-        const id = req.params.idEstab ?? null;
+        const id = req.params.idUbicacion ?? null;
 
         if (!id) {
             return res.status(400).json({
                 errorType: 'Bad Request',
-                message: 'El Id de Estab no fue recibido o está mal formateado'
+                message: 'El Id de Ubicación no fue recibido o está mal formateado'
             });
         }
-        const relaciones = await Est_Dispositivo.findAll({
-            where:
-            {
-                idEstab: id
-            }
+
+        const relaciones = await Ubi_Dispositivo.findAll({
+            where: { idUbicacion: id }
         });
 
-        if (relaciones == null) {
+        if (relaciones == null || relaciones.length == 0) {
             return res.status(404).json({
                 errorType: "Elemento no encontrado",
-                message: `No existe usuario con el ID ${id}`
+                message: `No existen dispositivos en la ubicación con el ID ${id}`
             });
         }
 
         const dispositivos = [];
         for (let index = 0; index < relaciones.length; index++) {
-            const est_disp = relaciones[index];
-            const { idDispositivo } = est_disp;
-            dispositivos.push( await Dispositivos.findOne({ where: { idDispositivo } }) )
+            const { idDispositivo } = relaciones[index];
+            const dispositivo = await Dispositivos.findOne({ where: { idDispositivo } });
+            if (dispositivo) {
+                dispositivos.push(dispositivo);
+            }
         }
-
-        return res.status(200).json(dispositivos);
-    },
-
-    getDispositivosByEstabUsuario: async (req, res) => {
-        const estab = req.params.estab;
-        const idUsuario = parseInt(req.params.idUsuario);
-
-        if (!estab || !idUsuario) {
-            return res.status(400).json({
-                errorType: 'Bad Request',
-                message: 'El Id de usuario o nombre de Establecimiento no fue recibido o está mal formateado'
-            });
-        }
-
-        const dispositivos = await sequelize.query(`SELECT d.idDispositivo, d.nombreDispositivo, d.modelo, e.establecimiento, g.grupo FROM dispositivos AS d JOIN est_dispositivos AS ed ON d.idDispositivo = ed.idDispositivo JOIN grupos as g ON ed.idGrupo = g.idGrupo JOIN establecimientos AS e ON e.idEstab = ed.idEstab JOIN usuario_estabs AS ue ON e.idEstab = ue.idEstab WHERE e.establecimiento = '${estab}' AND ue.idUsuario = ${idUsuario}; `, 
-        {
-            type: QueryTypes.SELECT
-        });
 
         return res.status(200).json(dispositivos);
     },
@@ -162,8 +137,14 @@ module.exports = {
             });
         }
 
-        const dispositivos = await sequelize.query(`SELECT d.idDispositivo, d.nombreDispositivo, d.modelo, e.establecimiento, g.grupo FROM dispositivos AS d JOIN est_dispositivos AS ed ON d.idDispositivo = ed.idDispositivo JOIN grupos as g ON ed.idGrupo = g.idGrupo JOIN establecimientos AS e ON e.idEstab = ed.idEstab JOIN usuario_estabs AS ue ON e.idEstab = ue.idEstab WHERE ue.idUsuario = ${idUsuario} ORDER BY e.establecimiento, g.grupo;`,
-        {
+        const dispositivos = await sequelize.query(`
+            SELECT d.idDispositivo, d.modelo
+            FROM dispositivos AS d
+            INNER JOIN ubi_dispositivos AS u ON u.idDispositivo = d.idDispositivo
+            INNER JOIN disp_usuario AS du ON du.idDispositivo = d.idDispositivo
+            WHERE du.idUsuario = :idUsuario
+        `, {
+            replacements: { idUsuario },
             type: QueryTypes.SELECT
         });
 
@@ -173,35 +154,33 @@ module.exports = {
     updateDispositivo: async (req, res) => {
         const idDispositivo = req.params.idDispositivo;
         const dispositivo = req.body;
-        console.info(idDispositivo, dispositivo);
-
 
         if (dispositivo.idDispositivo != idDispositivo) {
             return res.status(403).json({
                 errorType: `Movimiento no autorizado`,
                 message: `Los Id del elemento que busca modificar y la información recibida no coinciden`
-            })
+            });
         }
 
-        let minFields = ['idDispositivo', 'nombreDispositivo', 'modelo'];
+        let minFields = ['idDispositivo', 'modelo'];
 
-        const {minFields: minF, extraFields} = validateEntry(dispositivo, minFields);
+        const { minFields: minF, extraFields } = validateEntry(dispositivo, minFields);
 
         if (minF.length > 0 || extraFields.length > 0) {
             return res.status(400).json({
                 errorType: 'Objeto incompleto',
-                message: `${ minF.length > 0 ? `Hacen falta los campos {${minF.toString()}} para poder modificar la información del dispositivo. ` : ''}${extraFields.length > 0 ? `\nLos siguientes campos no deben exisir {${extraFields.toString()}}` : ''}`
+                message: `${minF.length > 0 ? `Hacen falta los campos {${minF.toString()}} para poder modificar la información del dispositivo. ` : ''}${extraFields.length > 0 ? `\nLos siguientes campos no deben existir {${extraFields.toString()}}` : ''}`
             });
         }
 
         if (await Dispositivos.findOne({ where: { idDispositivo } }) == null) {
             return res.status(404).json({
                 errorType: "Elemento no encontrado",
-                message: `No existe Dispositivo con el ID ${idDispositivo}`
+                message: `No existe dispositivo con el ID ${idDispositivo}`
             });
         }
 
-        await Dispositivos.update(dispositivo, { where: { idDispositivo } })
+        await Dispositivos.update(dispositivo, { where: { idDispositivo } });
 
         return res.status(200).json(await Dispositivos.findOne({ where: { idDispositivo } }));
     },
@@ -210,22 +189,18 @@ module.exports = {
         const idDispositivo = req.params.idDispositivo;
         const device = await Dispositivos.findOne({
             where: { idDispositivo }
-        })
+        });
 
         if (device == null) {
             return res.status(404).json({
                 errorType: "Elemento no encontrado",
-                message: `No existe Dispositivo con el ID ${idDispositivo}`
+                message: `No existe dispositivo con el ID ${idDispositivo}`
             });
         }
-        
-        const rel = await Est_Dispositivo.findOne({where: {idDispositivo: device.idDispositivo}})
 
-        await Est_Dispositivo.destroy({where: { idDispositivo }});
-        await db.usuario_estab.destroy({where: { idEstab: rel.idEstab }});
-        await db.grupo.destroy({where: {idGrupo: rel.idGrupo}});
-        await db.establecimiento.destroy({where: {idEstab: rel.idEstab}});
+        await Ubi_Dispositivo.destroy({ where: { idDispositivo } });
         await Dispositivos.destroy({ where: { idDispositivo } });
+
         return res.status(200).json(device);
     }
-}
+};

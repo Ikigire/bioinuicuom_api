@@ -4,15 +4,14 @@ const Sequelize = require('sequelize');
 const process = require('process');
 const usuarioModel = require('./usuario.model');
 const dispositivoModel = require('./dispositivo.model');
-const establecimientoModel = require('./establecimiento.model');
 const administradorModel = require('./administrador.model');
 const sensorModel = require('./sensor.model');
-const grupoModel = require('./grupo.model');
 const admon_usuarioModel = require('./admon_usuario.model');
-const usuario_estabModel = require('./usuario_estab.model');
 const disp_sensorModel = require('./disp_sensor.model');
-const est_dispositivoModel = require('./est_dispositivo.model');
+const ubi_dispositivoModel = require('./ubi_dispositivo.model');
 const validation_codesModel = require('./validation_codes.model');
+const disp_usuarioModel = require('./disp_usuario.model');
+
 const db = {};
 
 let sequelize = new Sequelize(
@@ -42,15 +41,12 @@ db.Sequelize = Sequelize;
 const Usuario = usuarioModel(sequelize, Sequelize.DataTypes);
 const Administrador = administradorModel(sequelize, Sequelize.DataTypes);
 const Dispositivo = dispositivoModel(sequelize, Sequelize.DataTypes);
-const Establecimiento = establecimientoModel(sequelize, Sequelize.DataTypes);
 const Sensor = sensorModel(sequelize, Sequelize.DataTypes);
-const Grupo = grupoModel(sequelize, Sequelize.DataTypes);
 // Relaciones
 const Admon_Usuario = admon_usuarioModel(sequelize, Sequelize.DataTypes);
-const Usuario_Estab = usuario_estabModel(sequelize, Sequelize.DataTypes);
 const Disp_Sensor = disp_sensorModel(sequelize, Sequelize.DataTypes);
-const Est_Dispositivo = est_dispositivoModel(sequelize, Sequelize.DataTypes);
-
+const Ubi_Dispositivo = ubi_dispositivoModel(sequelize, Sequelize.DataTypes);
+const Disp_Usuario = disp_usuarioModel(sequelize, Sequelize.DataTypes);
 // Tablas Apoyo 
 const ValidationCodes = validation_codesModel(sequelize, Sequelize.DataTypes);
 
@@ -73,16 +69,13 @@ const ValidationCodes = validation_codesModel(sequelize, Sequelize.DataTypes);
 db.usuarios = Usuario;
 db.administrador = Administrador;
 db.dispositivos = Dispositivo;
-db.establecimiento = Establecimiento;
 db.sensor = Sensor;
-db.grupo = Grupo;
 
 //Tablas de relación
 db.admon_usuario = Admon_Usuario;
-db.usuario_estab = Usuario_Estab;
 db.disp_sensor = Disp_Sensor;
-db.est_dispositivo = Est_Dispositivo;
-
+db.ubi_dispositivos = Ubi_Dispositivo;
+db.disp_usuario = Disp_Usuario;
 // Tablas apoyo
 db.validation_codes = ValidationCodes;
 

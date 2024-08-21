@@ -10,6 +10,7 @@ const DispUsuarioRouter = require('./routes/disp_usuarios.routes'); // Nueva rut
 const UsuarioRouter = require('./routes/usuario.routes');
 const DynamoDbRouter = require('./routes/dynamodb.routes');
 const ValidationCodesRouter = require('./routes/validation_codes.routes');
+const MqttRouter = require('./routes/mqtt.routes');
 
 // creación y configuración de la app con Express
 const app = express();  // creación de la app
@@ -48,6 +49,9 @@ app.use('/codes', ValidationCodesRouter);
 // AWS ROUTES
 // DynamoDB
 app.use('/historical', DynamoDbRouter);
+
+// MQTT
+app.use('/mqtt', MqttRouter);
 
 app.listen(port, () => {
     console.log(`Escuchando por peticiones en localhost${port}`);

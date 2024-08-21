@@ -10,17 +10,18 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true
     },
     ubicacion: {
-      type: DataTypes.STRING,
+        type: DataTypes.STRING,
+        
     },
     zona: {
       type: DataTypes.STRING,
     },
-    idDispositivo: {
-      type: DataTypes.STRING,
-      references: {
-        model: 'dispositivos',
-        key: 'idDispositivo'
-      }
+idDispositivo:{
+  type:DataTypes.STRING,
+  references: {
+    model: 'dispositivos',
+    key: 'idDispositivo'
+}
     },
   }, {
     sequelize

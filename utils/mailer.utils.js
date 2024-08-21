@@ -4,13 +4,9 @@ const createTransporter = () => {
     return nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: 'iaq.mon.cai@gmail.com',
-            pass: 'jesc eaxp svqf jyqj'
+            user: 'bio.inocuom20@gmail.com',
+            pass: 'lyqs desd ixci dppo'
         }
-        // auth: {
-        //     user: 'bio.inocuom20@gmail.com',
-        //     pass: 'lyqs desd ixci dppo'
-        // }
     });
 }
 
@@ -104,7 +100,7 @@ const createHtmlBody = (code, messageType = 1) => {
             }
             
             .container h4::before {
-                content: '🖋️';
+                content: '✌️';
             }
             
             .container h4 {
@@ -122,7 +118,7 @@ const createHtmlBody = (code, messageType = 1) => {
     </head>
     <body>
         <div class="container">
-            <h1>Mon CAI</h1>
+            <h1>BIO-INOCUOM</h1>
             <hr>
             <div class="message">
                 ${message}
@@ -135,10 +131,10 @@ const createHtmlBody = (code, messageType = 1) => {
             </div>
             <hr>
             <div class="despedida">
-                <h4>🖋️Atte:</h4>
+                <h4>Atte:</h4>
 
                 <p>
-                    El equipo de Mon CAI
+                    El equipo de Bio-Inocuom
                 </p>
             </div>
         </div>

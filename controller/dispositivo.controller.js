@@ -2,8 +2,8 @@ const { QueryTypes } = require('sequelize');
 const db = require('../models');
 const validateEntry = require('../utils/validation.utils');
 
-const Dispositivos = db.dispositivos; // ORM para la tabla de Dispositivos
-const Ubi_Dispositivo = db.ubi_dispositivos;
+const Dispositivos = db.dispositivo; // ORM para la tabla de Dispositivos
+const Ubi_Dispositivo = db.ubi_dispositivo;
 const Disp_Usuario = db.disp_usuario; // ORM para la tabla de Disp_Usuario
 const sequelize = db.sequelize;
 
